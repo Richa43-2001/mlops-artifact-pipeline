@@ -1,42 +1,32 @@
-import json
 import pickle
 from sklearn.datasets import load_digits
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-import os
+from sklearn.preprocessing import StandardScaler
+import json
 
-def load_config(path='config/config.json'):
+def load_config(path):
     with open(path, 'r') as f:
-        config = json.load(f)
-    return config
+        return json.load(f)
 
 def train_model(X, y, config):
-    model = LogisticRegression(
-        C=config['C'],
-        solver=config['solver'],
-        max_iter=config['max_iter']
-    )
+    model = LogisticRegression(C=config['C'], solver=config['solver'], max_iter=config['max_iter'])
     model.fit(X, y)
     return model
 
-def save_model(model, path='model_train.pkl'):
-    with open(path, 'wb') as f:
-        pickle.dump(model, f)
-
 def main():
-    # Load dataset
+    config = load_config('config/config.json')
     digits = load_digits()
     X, y = digits.data, digits.target
 
-    # Load config
-    config = load_config()
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # Train model
-    model = train_model(X, y, config)
+    model = train_model(X_scaled, y, config)
 
-    # Save model
-    save_model(model)
-    print("✅ Model training complete and saved as model_train.pkl")
+    # Save both model and scaler
+    with open('model_train.pkl', 'wb') as f:
+        pickle.dump({'model': model, 'scaler': scaler}, f)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
